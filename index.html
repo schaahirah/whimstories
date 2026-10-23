@@ -16,63 +16,23 @@
   <button type="button" id="vibesToggle" class="vibes-toggle" aria-pressed="true">✿ motion on</button>
 
   <header class="site-header">
-    <h1>whim<span>stories</span> ✿</h1>
+    <h1>whim<span>stories</span></h1>
   </header>
 
   <main class="layout">
-    <!-- CONTROLS -->
-    <section class="panel">
-      <div class="card">
-        <h2>photos</h2>
-        <label class="upload" id="dropZone">
-          <input type="file" id="fileInput" accept="image/*" multiple hidden />
-          <span class="upload-icon">＋</span>
-          <span><strong>add photos</strong><br /><small>tap or drag in · up to 8</small></span>
-        </label>
-        <div class="thumbs" id="thumbs"></div>
-        <div class="row-btns">
-          <button type="button" class="btn ghost small" id="shuffleBtn">shuffle</button>
-          <button type="button" class="btn ghost small" id="clearBtn">clear</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>layout</h2>
-        <div class="tpl-grid" id="tplGrid"></div>
-      </div>
-
-      <div class="card">
-        <h2>filter</h2>
-        <div class="filter-grid" id="filterGrid"></div>
-      </div>
-
-      <div class="card">
-        <h2>colours</h2>
-        <div class="chips" id="paletteChips"></div>
-      </div>
-
-      <div class="card">
-        <h2>background</h2>
-        <input type="file" id="bgInput" accept="image/*" hidden />
-        <div class="bg-grid" id="bgGrid"></div>
-        <button type="button" class="btn ghost small" onclick="document.getElementById('bgInput').click()">upload your own</button>
-      </div>
-
-      <div class="card">
-        <h2>text</h2>
-        <label>title <input id="headline" maxlength="60" /></label>
-        <label>small text <input id="subtext" maxlength="40" /></label>
-        <label>captions <small>(separate with commas)</small>
-          <input id="tags" maxlength="140" />
-        </label>
-        <p class="hint">leave blank to keep the default text</p>
-      </div>
-    </section>
-
-    <!-- PREVIEW -->
+    <!-- PREVIEW (always visible) -->
     <section class="preview">
       <div class="phone">
         <canvas id="story" aria-label="Story preview"></canvas>
+      </div>
+      <div class="sticker-edit" id="stickerEdit" hidden>
+        <label>size <input type="range" id="stkSize" min="60" max="900" /></label>
+        <label>rotate <input type="range" id="stkRot" min="-180" max="180" /></label>
+        <div class="row-btns">
+          <button type="button" class="btn ghost small" id="stkFront">to front</button>
+          <button type="button" class="btn ghost small" id="stkRemove">remove</button>
+          <button type="button" class="btn ghost small" id="stkDone">done</button>
+        </div>
       </div>
       <div class="actions">
         <button type="button" class="btn" id="downloadBtn">download</button>
@@ -80,42 +40,110 @@
       </div>
       <p class="privacy">your photos never leave your device ( ˘ ³˘)♡</p>
     </section>
+
+    <!-- CONTROLS (one tab at a time) -->
+    <section class="panel">
+      <nav class="tabs" role="tablist" aria-label="edit your story">
+        <button type="button" role="tab" id="tabbtn-photos" data-tab="photos" aria-controls="tab-photos" aria-selected="true">photos <span class="count" id="photoHint" aria-live="polite"></span></button>
+        <button type="button" role="tab" id="tabbtn-layout" data-tab="layout" aria-controls="tab-layout" aria-selected="false" tabindex="-1">layout</button>
+        <button type="button" role="tab" id="tabbtn-filter" data-tab="filter" aria-controls="tab-filter" aria-selected="false" tabindex="-1">filter</button>
+        <button type="button" role="tab" id="tabbtn-colours" data-tab="colours" aria-controls="tab-colours" aria-selected="false" tabindex="-1">colours</button>
+        <button type="button" role="tab" id="tabbtn-background" data-tab="background" aria-controls="tab-background" aria-selected="false" tabindex="-1">background</button>
+        <button type="button" role="tab" id="tabbtn-text" data-tab="text" aria-controls="tab-text" aria-selected="false" tabindex="-1">text</button>
+        <button type="button" role="tab" id="tabbtn-stickers" data-tab="stickers" aria-controls="tab-stickers" aria-selected="false" tabindex="-1">stickers</button>
+      </nav>
+      <div class="card tabpanel" id="tab-photos" role="tabpanel" aria-labelledby="tabbtn-photos">
+        <label class="upload" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*" multiple hidden />
+          <span class="upload-icon">＋</span>
+          <span><strong>add photos</strong><br /><small id="uploadNote">tap or drag in</small></span>
+        </label>
+        <div class="thumbs" id="thumbs"></div>
+        <div class="row-btns">
+          <button type="button" class="btn ghost small" id="shuffleBtn">shuffle</button>
+          <button type="button" class="btn ghost small" id="clearBtn">clear</button>
+        </div>
+      </div>
+      <div class="card tabpanel" id="tab-layout" role="tabpanel" aria-labelledby="tabbtn-layout" hidden>
+        <div class="tpl-grid" id="tplGrid"></div>
+      </div>
+      <div class="card tabpanel" id="tab-filter" role="tabpanel" aria-labelledby="tabbtn-filter" hidden>
+        <div class="filter-grid" id="filterGrid"></div>
+      </div>
+      <div class="card tabpanel" id="tab-colours" role="tabpanel" aria-labelledby="tabbtn-colours" hidden>
+        <div class="chips" id="paletteChips"></div>
+      </div>
+      <div class="card tabpanel" id="tab-background" role="tabpanel" aria-labelledby="tabbtn-background" hidden>
+        <input type="file" id="bgInput" accept="image/*" hidden />
+        <div class="bg-grid" id="bgGrid"></div>
+        <button type="button" class="btn ghost small" onclick="document.getElementById('bgInput').click()">upload your own</button>
+      </div>
+      <div class="card tabpanel" id="tab-text" role="tabpanel" aria-labelledby="tabbtn-text" hidden>
+        <label>title <input id="headline" maxlength="60" /></label>
+        <label>small text <input id="subtext" maxlength="40" /></label>
+        <label>captions <small>(use commas)</small>
+          <input id="tags" maxlength="140" />
+        </label>
+      </div>
+      <div class="card tabpanel" id="tab-stickers" role="tabpanel" aria-labelledby="tabbtn-stickers" hidden>
+        <p class="hint top">tap to add · drag to move</p>
+        <div class="sticker-tray" id="packTray"></div>
+      </div>
+    </section>
   </main>
 
-  <!-- FEEDBACK -->
+  <!-- FEEDBACK (a little letter) -->
   <section class="feedback-wrap">
-    <div class="card feedback">
-      <h2>feedback</h2>
-      <p class="hint top">ideas or bugs? tell me (・ω・)ノ</p>
+    <div class="letter-stage" id="letterStage">
+      <div class="letter" id="letter">
+        <div class="stamp" aria-hidden="true"><span>(˶ᵔ ᵕ ᵔ˶)</span><small>whim post</small></div>
+        <div class="postmark" aria-hidden="true" id="postmark"></div>
 
-      <p class="mini-label">how is it?</p>
-      <div class="rating" id="fbRating">
-        <button type="button" data-rate="love it" aria-label="love it" title="love it">(♡ᴗ♡)</button>
-        <button type="button" data-rate="good" aria-label="good" title="good">(◕‿◕)</button>
-        <button type="button" data-rate="okay" aria-label="okay" title="okay">(・_・)</button>
-        <button type="button" data-rate="bad" aria-label="bad" title="bad">(×_×)</button>
+        <h2 class="greet">dear whimstories,</h2>
+        <p class="hint">ideas or bugs? tell me (・ω・)ノ</p>
+
+        <p class="mini-label">how is it?</p>
+        <div class="rating" id="fbRating">
+          <button type="button" data-rate="love it" aria-label="love it" title="love it">(♡ᴗ♡)</button>
+          <button type="button" data-rate="good" aria-label="good" title="good">(◕‿◕)</button>
+          <button type="button" data-rate="okay" aria-label="okay" title="okay">(・_・)</button>
+          <button type="button" data-rate="bad" aria-label="bad" title="bad">(×_×)</button>
+        </div>
+
+        <p class="mini-label">type</p>
+        <div class="chips" id="fbType">
+          <button type="button" class="chip active" data-type="idea" aria-pressed="true">idea</button>
+          <button type="button" class="chip" data-type="bug" aria-pressed="false">bug</button>
+          <button type="button" class="chip" data-type="love" aria-pressed="false">just love</button>
+        </div>
+
+        <label class="mini-label" for="fbText">message</label>
+        <textarea id="fbText" class="lined" rows="3" maxlength="1000" placeholder="what should change?"></textarea>
+
+        <div class="signoff">
+          <span>love,</span>
+          <input id="fbName" maxlength="40" placeholder="anonymous" aria-label="your name (optional)" />
+        </div>
+
+        <button type="button" class="btn" id="fbSend">seal &amp; send ✉</button>
+        <p class="hint" id="fbStatus" aria-live="polite"></p>
       </div>
 
-      <p class="mini-label">type</p>
-      <div class="chips" id="fbType">
-        <button type="button" class="chip active" data-type="idea" aria-pressed="true">idea</button>
-        <button type="button" class="chip" data-type="bug" aria-pressed="false">bug</button>
-        <button type="button" class="chip" data-type="love" aria-pressed="false">just love</button>
+      <!-- envelope that appears when sending -->
+      <div class="envelope" id="envelope" aria-hidden="true">
+        <div class="env-back"></div>
+        <div class="env-paper"></div>
+        <div class="env-front"></div>
+        <div class="env-flap"></div>
+        <div class="env-seal">♡</div>
       </div>
-
-      <label class="spaced">message
-        <textarea id="fbText" rows="4" maxlength="1000" placeholder="what should change?"></textarea>
-      </label>
-      <label>name <small>(optional)</small>
-        <input id="fbName" maxlength="40" placeholder="anonymous" />
-      </label>
-      <button type="button" class="btn" id="fbSend">send</button>
-      <p class="hint" id="fbStatus" aria-live="polite"></p>
+      <div class="sent-note" id="sentNote" aria-live="polite" hidden>sent! thank you (˶ᵔ ᵕ ᵔ˶)</div>
     </div>
   </section>
 
   <footer class="site-footer">© 2026 schaahirah</footer>
 
+  <script src="stickers/pack.js"></script>
   <script src="bg-anim.js"></script>
   <script src="script.js"></script>
 </body>

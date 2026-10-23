@@ -1,3 +1,11 @@
+// ===== WhimStories =====
+// Cute IG Story collage maker. Everything runs in the browser:
+// photos are never uploaded anywhere.
+
+// ---------- Settings (edit these!) ----------
+// githubRepo: used to open a pre-filled GitHub Issue for feedback
+// feedbackEndpoint: optional Formspree URL (https://formspree.io/f/xxxx) so people
+// without a GitHub account can send feedback too. Leave "" to use GitHub Issues only.
 const CONFIG = {
   githubRepo: "schaahirah/whimstories",
   feedbackEndpoint: "",
@@ -6,6 +14,7 @@ const CONFIG = {
 const W = 1080;
 const H = 1920;
 
+// ---------- Colour vibes ----------
 const PALETTES = {
   bubblegum: { label: "bubblegum", bg: "#ffd1e8", bg2: "#ff8cc6", accent: "#ff3d9a", accent2: "#ffe066", pop: "#4f7cff", ink: "#a3125a", paper: "#fff6fb" },
   butter:    { label: "butter",    bg: "#fff4b8", bg2: "#ffcf5c", accent: "#ff6b6b", accent2: "#46c2b0", pop: "#ff9f1c", ink: "#8a4b00", paper: "#fffdf0" },
@@ -15,6 +24,9 @@ const PALETTES = {
   cherry:    { label: "cherry",    bg: "#ffe0dc", bg2: "#ff6b6b", accent: "#e01e37", accent2: "#7bd389", pop: "#ffd166", ink: "#8c0f22", paper: "#fff7f5" },
 };
 
+// ---------- Filters ----------
+// sat = saturation, con = contrast, bri = brightness, tint = [r,g,b] shift,
+// sepia = 0..1, fade = lift blacks, grain = film noise, shadowTint = colour in dark areas
 const FILTERS = {
   none:    { label: "original" },
   bw:      { label: "b&w", sat: 0, con: 1.1 },
@@ -27,22 +39,25 @@ const FILTERS = {
   cool:    { label: "cool", sat: 0.9, con: 1.05, tint: [-10, 4, 18] },
 };
 
+// ---------- State ----------
 const state = {
   template: "grid",
   palette: "bubblegum",
   filter: "none",
-  bg: "default",   
-  bgImage: null,  
-  photos: [], 
+  bg: "default",   // "default" = template's own background
+  bgImage: null,   // canvas of the user's own background
+  photos: [], // { orig: canvas, cache: { filterName: canvas } }
 };
 const MAX_PHOTOS = 8;
 
+// ---------- Elements ----------
 const $ = (id) => document.getElementById(id);
 const canvas = $("story");
 canvas.width = W;
 canvas.height = H;
 const ctx = canvas.getContext("2d");
 
+// ---------- Fonts ----------
 const FONT = {
   script: (s) => `italic 700 ${s}px "Playfair Display", Georgia, serif`,
   mono:   (s) => `700 ${s}px "Space Mono", ui-monospace, monospace`,
@@ -50,6 +65,9 @@ const FONT = {
   sans:   (s) => `800 ${s}px "Inter", system-ui, sans-serif`,
 };
 
+// =====================================================
+// Photo filters (pixel by pixel, works on every browser)
+// =====================================================
 function applyFilter(src, f) {
   if (!f || f === FILTERS.none) return src;
   const out = document.createElement("canvas");
@@ -86,7 +104,7 @@ function applyFilter(src, f) {
     g = (g - 128) * con + 128 + bri + t[1];
     b = (b - 128) * con + 128 + bri + t[2];
 
-    // film look
+    // colour in the shadows (film look)
     if (st) {
       const s = Math.max(0, 1 - gray / 128);
       r += st[0] * s; g += st[1] * s; b += st[2] * s;
@@ -104,21 +122,24 @@ function applyFilter(src, f) {
       r += n; g += n; b += n;
     }
 
-    a[i] = r; a[i + 1] = g; a[i + 2] = b; 
+    a[i] = r; a[i + 1] = g; a[i + 2] = b; // values auto-clamp to 0..255
   }
   x.putImageData(img, 0, 0);
   return out;
 }
 
 function pic(i) {
-  if (!state.photos.length) return null;
-  const photo = state.photos[i % state.photos.length];
+  const photo = state.photos[i]; // missing photos show an empty "+ pic" slot
+  if (!photo) return null;
   if (!photo.cache[state.filter]) {
     photo.cache[state.filter] = applyFilter(photo.orig, FILTERS[state.filter]);
   }
   return photo.cache[state.filter];
 }
 
+// =====================================================
+// Drawing helpers
+// =====================================================
 const pal = () => PALETTES[state.palette];
 
 function rrPath(c, x, y, w, h, r) {
@@ -187,6 +208,8 @@ function drawPhoto(c, i, x, y, w, h, { radius = 0, oval = false } = {}) {
   else placeholder(c, x, y, w, h, i);
   c.restore();
 }
+
+// ----- text -----
 function fitFont(c, text, maxW, size, fam) {
   let s = size;
   c.font = FONT[fam](s);
@@ -234,6 +257,7 @@ function wrapLines(c, text, maxW) {
   return lines;
 }
 
+// ----- backgrounds -----
 function gradientBg(c, c1, c2, y0 = 0, h = H) {
   const g = c.createLinearGradient(0, y0, W, y0 + h);
   g.addColorStop(0, c1);
@@ -308,6 +332,7 @@ function noise(c, alpha) {
   c.restore();
 }
 
+// ----- stickers -----
 function star(c, cx, cy, r, color, { pts = 5, inner = 0.45, rot = 0 } = {}) {
   c.save();
   c.translate(cx, cy);
@@ -425,6 +450,7 @@ const TEMPLATES = {
     },
   },
 
+  // Inspired by: black photobooth strips on a bright background
   strips: {
     label: "strips",
     photos: 6,
@@ -462,6 +488,7 @@ const TEMPLATES = {
     },
   },
 
+  // Inspired by: polaroids stuck on a fridge with magnets
   fridge: {
     label: "fridge",
     photos: 5,
@@ -518,6 +545,7 @@ const TEMPLATES = {
     },
     draw(c, p, t) {
 
+      // squiggly line
       c.save();
       c.strokeStyle = p.accent;
       c.lineWidth = 7;
@@ -559,6 +587,7 @@ const TEMPLATES = {
     },
   },
 
+  // Inspired by: big oval photo + numbered 001 002 003 frames
   spotlight: {
     label: "spotlight",
     photos: 4,
@@ -566,7 +595,7 @@ const TEMPLATES = {
     sub: "roll 01 · 36 exp",
     tags: "",
     bg(c, p) {
- 
+      // top half: corduroy texture, bottom half: gingham
       c.fillStyle = p.bg2;
       c.fillRect(0, 0, W, 1000);
       c.fillStyle = "rgba(0,0,0,.08)";
@@ -582,6 +611,7 @@ const TEMPLATES = {
       c.restore();
       drawPhoto(c, 0, 140, 200, 800, 640, { oval: true });
 
+      // headline words around the oval
       const words = t.headline.split(/\s+/).filter(Boolean);
       const slots = [[80, 120, "left"], [290, 940, "center"], [1000, 900, "right"]];
       const chunks = words.length > 3 ? [words[0], words[1], words.slice(2).join(" ")] : words;
@@ -589,6 +619,7 @@ const TEMPLATES = {
         txt(c, w, slots[k][0], slots[k][1], { fam: k === 1 ? "script" : "sans", size: 64, color: "#fff", align: slots[k][2], maxW: 520 }));
       [[330, 70], [960, 120], [70, 520], [1015, 470], [800, 960]].forEach(([x, y]) => star(c, x, y, 30, "#ffffff"));
 
+      // bottom half: 3 numbered frames
       for (let k = 0; k < 3; k++) {
         const x = 75 + k * 320, y = 1170, w = 290, h = 380;
         c.save();
@@ -604,7 +635,8 @@ const TEMPLATES = {
       star(c, 110, 1080, 50, p.pop);
     },
   },
-  
+
+  // Inspired by: envelope + card with oval photo and cute text
   letter: {
     label: "love letter",
     photos: 2,
@@ -618,6 +650,7 @@ const TEMPLATES = {
     },
     draw(c, p, t) {
 
+      // envelope
       rotated(c, 540, 600, -0.07, () => {
         c.save();
         shadow(c, 30, 14, 0.2);
@@ -630,7 +663,8 @@ const TEMPLATES = {
         c.moveTo(-380, -250); c.lineTo(0, 40); c.lineTo(380, -250);
         c.closePath(); c.fill();
       });
-      
+
+      // card
       rotated(c, 560, 690, 0.05, () => {
         c.save();
         shadow(c, 30, 14, 0.22);
@@ -652,6 +686,7 @@ const TEMPLATES = {
           txt(c, ln, -40, startY + k * 48, { fam: "mono", size: 30, color: "#333", align: "left", maxW: 390 }));
       });
 
+      // striped photo frame
       const fx = 170, fy = 1060, fw = 740, fh = 720;
       c.save();
       shadow(c, 30, 14, 0.22);
@@ -675,6 +710,9 @@ const TEMPLATES = {
   },
 };
 
+// =====================================================
+// Backgrounds (all follow the chosen colour vibe)
+// =====================================================
 function seeded(seed) {
   return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 }
@@ -713,6 +751,9 @@ function drawBackground(c, p) {
   if (state.bg !== "default" && state.bg !== "custom") noise(c, 0.06);
 }
 
+// =====================================================
+// Rendering
+// =====================================================
 function textFor(key) {
   const tpl = TEMPLATES[key];
   const headline = $("headline").value.trim() || tpl.headline;
@@ -722,15 +763,16 @@ function textFor(key) {
   return { headline, sub, tags };
 }
 
-function drawTemplate(c, key) {
+function drawTemplate(c, key, { withStickers = false, showSelection = false } = {}) {
   c.save();
   c.clearRect(0, 0, W, H);
   const prev = state.template;
-  state.template = key; 
+  state.template = key; // so "layout's own" background matches this template
   drawBackground(c, pal());
   state.template = prev;
   TEMPLATES[key].draw(c, pal(), textFor(key));
   c.restore();
+  if (withStickers) drawStickers(c, showSelection);
 }
 
 let renderQueued = false;
@@ -739,10 +781,11 @@ function render() {
   renderQueued = true;
   requestAnimationFrame(() => {
     renderQueued = false;
-    drawTemplate(ctx, state.template);
+    drawTemplate(ctx, state.template, { withStickers: true, showSelection: true });
   });
 }
 
+// ----- template thumbnails -----
 const offscreen = document.createElement("canvas");
 offscreen.width = W;
 offscreen.height = H;
@@ -761,6 +804,7 @@ function refreshTemplateThumbs() {
   }, 250);
 }
 
+// ----- filter thumbnails -----
 function sampleCanvas() {
   const s = document.createElement("canvas");
   s.width = s.height = 120;
@@ -789,6 +833,7 @@ function refreshFilterThumbs() {
   });
 }
 
+// ----- background thumbnails -----
 let bgTimer = null;
 function refreshBgThumbs() {
   clearTimeout(bgTimer);
@@ -812,6 +857,9 @@ function refreshAll() {
   refreshBgThumbs();
 }
 
+// =====================================================
+// UI building
+// =====================================================
 function buildTemplatePicker() {
   $("tplGrid").innerHTML = Object.entries(TEMPLATES)
     .map(([key, t]) => `
@@ -865,7 +913,7 @@ function renderThumbs() {
   box.innerHTML = "";
   state.photos.forEach((photo, i) => {
     const div = document.createElement("div");
-    div.className = "thumb";
+    div.className = "thumb" + (i >= TEMPLATES[state.template].photos ? " extra" : "");
     const tc = document.createElement("canvas");
     tc.width = tc.height = 120;
     drawCover(tc.getContext("2d"), photo.orig, 0, 0, 120, 120);
@@ -874,8 +922,23 @@ function renderThumbs() {
       `<span class="num">${i + 1}</span><button type="button" class="del" data-remove="${i}" aria-label="Remove photo ${i + 1}">✕</button>`);
     box.appendChild(div);
   });
+  updatePhotoHint();
 }
 
+// small counter next to "photos": 3/6, 6/6 ✓, 6/2
+function updatePhotoHint() {
+  const need = TEMPLATES[state.template].photos;
+  const have = state.photos.length;
+  const count = $("photoHint");
+  $("uploadNote").textContent = "tap or drag in";
+  count.className = "count " + (have === need ? "ok" : have > need ? "over" : have ? "more" : "");
+  count.textContent = have === need ? `${have}/${need} ✓` : `${have}/${need}`;
+  count.title = have > need ? "faded photos won't show" : `this layout uses ${need} photos`;
+}
+
+// =====================================================
+// Photo upload
+// =====================================================
 function loadImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -904,6 +967,7 @@ async function addFiles(fileList) {
       break;
     }
     try {
+      // shrink big phone photos so filters stay fast
       state.photos.push({ orig: await fileToCanvas(file), cache: {} });
     } catch (err) {
       alert("couldn't open that file, try a JPG or PNG (・・;)");
@@ -914,13 +978,24 @@ async function addFiles(fileList) {
   refreshAll();
 }
 
+// =====================================================
+// Export
+// =====================================================
 function fileName() {
   return `whimstories-${state.template}.png`;
 }
 
 function getBlob() {
-  drawTemplate(ctx, state.template);
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  drawTemplate(ctx, state.template, { withStickers: true });
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob((blob) => { render(); resolve(blob); }, "image/png");
+    } catch (err) {
+      render();
+      alert("download only works on the published website, not when opening the file directly (・・;)");
+      reject(err);
+    }
+  });
 }
 
 async function download() {
@@ -943,6 +1018,9 @@ async function share() {
   }
 }
 
+// =====================================================
+// Events
+// =====================================================
 $("fileInput").addEventListener("change", (e) => {
   addFiles(e.target.files);
   e.target.value = "";
@@ -991,6 +1069,7 @@ $("tplGrid").addEventListener("click", (e) => {
   state.template = btn.dataset.tpl;
   setActive("tplGrid", "tpl", state.template);
   updatePlaceholders();
+  renderThumbs(); // re-mark which photos are used
   render();
 });
 
@@ -1015,7 +1094,7 @@ $("bgGrid").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-bg]");
   if (!btn) return;
   if (btn.dataset.bg === "custom" && !state.bgImage) {
-    $("bgInput").click(); 
+    $("bgInput").click(); // no pic yet, so ask for one
     return;
   }
   state.bg = btn.dataset.bg;
@@ -1043,7 +1122,161 @@ $("bgInput").addEventListener("change", async (e) => {
 $("downloadBtn").addEventListener("click", download);
 $("shareBtn").addEventListener("click", share);
 
+// =====================================================
+// Stickers
+// =====================================================
+const stk = { placed: [], selected: -1, drag: null };
 
+function loadImg(src) {
+  return new Promise((resolve, reject) => {
+    const im = new Image();
+    im.onload = () => resolve(im);
+    im.onerror = reject;
+    im.src = src;
+  });
+}
+
+function stickerSize(s) {
+  // s.size = length of the longest side, in story pixels
+  const k = s.size / Math.max(s.img.width, s.img.height);
+  return { w: s.img.width * k, h: s.img.height * k };
+}
+
+function drawStickers(c, showSelection) {
+  stk.placed.forEach((s, i) => {
+    const { w, h } = stickerSize(s);
+    c.save();
+    c.translate(s.x, s.y);
+    c.rotate(s.rot);
+    c.shadowColor = "rgba(60, 20, 50, .25)";
+    c.shadowBlur = 18;
+    c.shadowOffsetY = 8;
+    c.drawImage(s.img, -w / 2, -h / 2, w, h);
+    if (showSelection && i === stk.selected) {
+      c.shadowColor = "transparent";
+      c.setLineDash([16, 10]);
+      c.lineWidth = 5;
+      c.strokeStyle = "#ff4fa3";
+      c.strokeRect(-w / 2 - 10, -h / 2 - 10, w + 20, h + 20);
+    }
+    c.restore();
+  });
+}
+
+function addSticker(img) {
+  stk.placed.push({ img, x: W / 2 + (Math.random() - 0.5) * 200, y: H / 2 + (Math.random() - 0.5) * 300, size: 320, rot: 0 });
+  selectSticker(stk.placed.length - 1);
+}
+
+function selectSticker(i) {
+  stk.selected = i;
+  const edit = $("stickerEdit");
+  if (i < 0) {
+    edit.hidden = true;
+  } else {
+    const s = stk.placed[i];
+    $("stkSize").value = Math.round(s.size);
+    $("stkRot").value = Math.round((s.rot * 180) / Math.PI);
+    edit.hidden = false;
+  }
+  render();
+}
+
+// screen position -> story position
+function toStory(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
+}
+
+function hitSticker(p) {
+  for (let i = stk.placed.length - 1; i >= 0; i--) {
+    const s = stk.placed[i];
+    const { w, h } = stickerSize(s);
+    const dx = p.x - s.x, dy = p.y - s.y;
+    const lx = dx * Math.cos(-s.rot) - dy * Math.sin(-s.rot);
+    const ly = dx * Math.sin(-s.rot) + dy * Math.cos(-s.rot);
+    if (Math.abs(lx) <= w / 2 + 10 && Math.abs(ly) <= h / 2 + 10) return i;
+  }
+  return -1;
+}
+
+canvas.addEventListener("pointerdown", (e) => {
+  const p = toStory(e);
+  const i = hitSticker(p);
+  if (i < 0) {
+    if (stk.selected >= 0) selectSticker(-1);
+    return;
+  }
+  e.preventDefault();
+  selectSticker(i);
+  stk.drag = { dx: p.x - stk.placed[i].x, dy: p.y - stk.placed[i].y };
+  canvas.setPointerCapture(e.pointerId);
+  canvas.classList.add("grabbing");
+});
+
+canvas.addEventListener("pointermove", (e) => {
+  const p = toStory(e);
+  if (stk.drag && stk.selected >= 0) {
+    const s = stk.placed[stk.selected];
+    s.x = Math.max(0, Math.min(W, p.x - stk.drag.dx));
+    s.y = Math.max(0, Math.min(H, p.y - stk.drag.dy));
+    render();
+  } else {
+    canvas.classList.toggle("grab", hitSticker(p) >= 0);
+  }
+});
+
+["pointerup", "pointercancel"].forEach((ev) => canvas.addEventListener(ev, () => {
+  stk.drag = null;
+  canvas.classList.remove("grabbing");
+}));
+
+$("stkSize").addEventListener("input", (e) => {
+  if (stk.selected < 0) return;
+  stk.placed[stk.selected].size = Number(e.target.value);
+  render();
+});
+$("stkRot").addEventListener("input", (e) => {
+  if (stk.selected < 0) return;
+  stk.placed[stk.selected].rot = (Number(e.target.value) * Math.PI) / 180;
+  render();
+});
+$("stkFront").addEventListener("click", () => {
+  if (stk.selected < 0) return;
+  const [s] = stk.placed.splice(stk.selected, 1);
+  stk.placed.push(s);
+  selectSticker(stk.placed.length - 1);
+});
+$("stkRemove").addEventListener("click", () => {
+  if (stk.selected < 0) return;
+  stk.placed.splice(stk.selected, 1);
+  selectSticker(-1);
+});
+$("stkDone").addEventListener("click", () => selectSticker(-1));
+
+// ----- the owner's sticker pack (stickers/pack.js) -----
+function buildPackTray() {
+  const tray = $("packTray");
+  const pack = window.STICKER_PACK || [];
+  if (!pack.length) {
+    tray.innerHTML = '<p class="hint empty">no stickers yet</p>';
+    return;
+  }
+  tray.innerHTML = pack
+    .map((name) => `<button type="button" class="stk" data-src="stickers/${encodeURIComponent(name)}" aria-label="add ${name.replace(/\.\w+$/, "")} sticker"><img src="stickers/${encodeURIComponent(name)}" alt="" loading="lazy" /></button>`)
+    .join("");
+}
+
+$("packTray").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-src]");
+  if (!btn) return;
+  try { addSticker(await loadImg(btn.dataset.src)); }
+  catch (_) { alert("couldn't load that sticker (・・;)"); }
+});
+
+// =====================================================
+// Feedback ("spill the tea")
+// =====================================================
 const feedback = { rating: "", type: "idea" };
 
 function pickOne(containerId, attr, value) {
@@ -1072,6 +1305,50 @@ function setStatus(msg) {
   $("fbStatus").textContent = msg;
 }
 
+// date on the postmark
+(() => {
+  const d = new Date();
+  $("postmark").innerHTML = `${d.getDate()} ${d.toLocaleString("en", { month: "short" }).toUpperCase()}<br>${d.getFullYear()}`;
+})();
+
+// fold the letter into an envelope and send it flying
+function flyLetter() {
+  const stage = $("letterStage");
+  const note = $("sentNote");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reset = () => {
+    stage.classList.remove("sending", "sealed", "flying");
+    note.hidden = true;
+    $("fbText").value = "";
+    setStatus("");
+  };
+  if (reduce) {
+    note.hidden = false;
+    setTimeout(reset, 2500);
+    return;
+  }
+  stage.classList.add("sending");
+  setTimeout(() => stage.classList.add("sealed"), 900);
+  setTimeout(() => {
+    stage.classList.add("flying");
+    // little hearts trailing behind
+    for (let k = 0; k < 8; k++) {
+      const h = document.createElement("span");
+      h.className = "trail-heart";
+      h.textContent = "♡";
+      h.style.left = 45 + Math.random() * 10 + "%";
+      h.style.top = 45 + Math.random() * 10 + "%";
+      h.style.setProperty("--dx", (Math.random() * 160 - 40) + "px");
+      h.style.setProperty("--dy", (-60 - Math.random() * 120) + "px");
+      h.style.animationDelay = k * 70 + "ms";
+      stage.appendChild(h);
+      setTimeout(() => h.remove(), 1800);
+    }
+  }, 1700);
+  setTimeout(() => { note.hidden = false; }, 2700);
+  setTimeout(reset, 4700);
+}
+
 $("fbSend").addEventListener("click", async () => {
   const message = $("fbText").value.trim();
   const name = $("fbName").value.trim() || "anon bestie";
@@ -1093,8 +1370,9 @@ $("fbSend").addEventListener("click", async () => {
 
   const sendBtn = $("fbSend");
   sendBtn.disabled = true;
-  setTimeout(() => (sendBtn.disabled = false), 8000); 
+  setTimeout(() => (sendBtn.disabled = false), 8000); // small anti-spam pause
 
+  // Option A: Formspree (no account needed for the person sending)
   if (CONFIG.feedbackEndpoint) {
     setStatus("sending…");
     try {
@@ -1104,15 +1382,15 @@ $("fbSend").addEventListener("click", async () => {
         body: JSON.stringify(details),
       });
       if (!res.ok) throw new Error();
-      setStatus("sent, thank you! (˶ᵔ ᵕ ᵔ˶)");
-      $("fbText").value = "";
+      flyLetter();
     } catch (_) {
       setStatus("couldn't send, try again later (╥﹏╥)");
     }
     return;
   }
 
-  if (!CONFIG.githubRepo || CONFIG.githubRepo.includes("YOUR" + "-USERNAME")) { 
+  // Option B: pre-filled GitHub Issue
+  if (!CONFIG.githubRepo || CONFIG.githubRepo.includes("YOUR" + "-USERNAME")) { // placeholder not replaced yet
     setStatus("feedback isn't set up yet (see README)");
     return;
   }
@@ -1124,17 +1402,47 @@ $("fbSend").addEventListener("click", async () => {
   const url = `https://github.com/${CONFIG.githubRepo}/issues/new?labels=feedback` +
     `&title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
   window.open(url, "_blank", "noopener");
-  setStatus("opening GitHub to post it (needs a GitHub account)");
+  flyLetter();
 });
 
+// =====================================================
+// Tabs (one control panel at a time, preview stays in view)
+// =====================================================
+const tabButtons = [...document.querySelectorAll(".tabs [data-tab]")];
+function openTab(name, focus = false) {
+  tabButtons.forEach((b) => {
+    const on = b.dataset.tab === name;
+    b.setAttribute("aria-selected", on);
+    b.tabIndex = on ? 0 : -1;
+    $("tab-" + b.dataset.tab).hidden = !on;
+    if (on && focus) b.focus();
+    if (on) b.scrollIntoView({ block: "nearest", inline: "nearest" });
+  });
+}
+document.querySelector(".tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-tab]");
+  if (b) openTab(b.dataset.tab);
+});
+document.querySelector(".tabs").addEventListener("keydown", (e) => {
+  const i = tabButtons.findIndex((b) => b.getAttribute("aria-selected") === "true");
+  if (e.key === "ArrowRight") { e.preventDefault(); openTab(tabButtons[(i + 1) % tabButtons.length].dataset.tab, true); }
+  if (e.key === "ArrowLeft")  { e.preventDefault(); openTab(tabButtons[(i - 1 + tabButtons.length) % tabButtons.length].dataset.tab, true); }
+});
+
+// =====================================================
+// Start
+// =====================================================
 buildTemplatePicker();
 buildBgPicker();
+buildPackTray();
 buildFilterPicker();
 buildPaletteChips();
 updatePlaceholders();
+updatePhotoHint();
 refreshFilterThumbs();
 refreshAll();
 
+// Redraw once the cute fonts have loaded
 Promise.all([
   document.fonts.load(FONT.script(80)),
   document.fonts.load(FONT.mono(40)),

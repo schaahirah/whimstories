@@ -1,5 +1,6 @@
 // ===== Floating pixel-art background =====
-// Little pixel flowers, hearts, daisies, sparkles & clouds drift up the page.
+// Little pixel fish, yarn, daisies, hearts & sparkles drift up the page,
+// and a ginger pixel cat walks along the bottom.
 // Turns itself off for people who prefer reduced motion, pauses when the tab
 // is hidden, and can be switched off with the "motion" button.
 
@@ -20,6 +21,11 @@
     r: "#ff6b8b", // heart red-pink
     w: "#ffffff", // white
     o: "#ffb36b", // orange
+    k: "#2e2433", // black cat
+    c: "#fff3e6", // cream cat
+    G: "#f2a65a", // ginger cat
+    e: "#ffb3c7", // inner ear / nose pink
+    s: "#9b8aa3", // soft grey
   };
 
   // ----- pixel art (each letter = one pixel, "." = empty) -----
@@ -86,6 +92,35 @@
       "wwwwwwww",
       ".wwwwww.",
     ],
+    paw: [
+      "p.p.p",
+      ".....",
+      ".ppp.",
+      "ppppp",
+      ".ppp.",
+    ],
+    fish: [
+      "..bb...b",
+      ".bbbb.bb",
+      "bkbbbbbb",
+      ".bbbb.bb",
+      "..bb...b",
+    ],
+    yarn: [
+      ".ppp..",
+      "pPppp.",
+      "ppPpp.",
+      "pppPp.",
+      ".ppp.p",
+      ".....p",
+    ],
+    bow: [
+      "PP...PP",
+      "PPP.PPP",
+      "PPPrPPP",
+      "PPP.PPP",
+      "PP...PP",
+    ],
     cherry: [
       "...g",
       "..g.",
@@ -95,12 +130,41 @@
     ],
   };
 
-  // How often each sprite shows up
-  const WEIGHTS = {
-    flowerPink: 5, flowerLilac: 4, flowerBlue: 3, daisy: 2, tulip: 3,
-    heart: 4, sparkle: 3, tinyStar: 1, cloud: 1, cherry: 2,
-  };
+  // ----- what floats in the background, and how often -----
+  const WEIGHTS = { fish: 3, yarn: 3, daisy: 3, heart: 3, flowerPink: 2, sparkle: 2 };
   const BAG = Object.entries(WEIGHTS).flatMap(([k, n]) => Array(n).fill(k));
+  const WALKER_COLOR = "G"; // ginger cat
+
+  // ----- a little cat that walks along the bottom of the screen -----
+  const WALK = [
+    [
+      ".........k.k",
+      ".........kkk",
+      "k.......kkyk",
+      ".k.kkkkkkkkk",
+      "..kkkkkkkkk.",
+      "..kkkkkkkk..",
+      "..k.k..k.k..",
+    ],
+    [
+      ".........k.k",
+      ".........kkk",
+      "k.......kkyk",
+      ".k.kkkkkkkkk",
+      "..kkkkkkkkk.",
+      "..kkkkkkkk..",
+      "...k.k..k.k.",
+    ],
+  ].map((rows) => rows.map((r) => r.replace(/k/g, WALKER_COLOR)));
+  WALK.forEach((rows, i) => (ART["walk" + i] = rows));
+  const walker = { x: -120, speed: 0.9, pause: 0 };
+  // separate thin strip on top of the page so the cat walks in front of everything
+  const walkCanvas = document.createElement("canvas");
+  walkCanvas.id = "catWalk";
+  walkCanvas.setAttribute("aria-hidden", "true");
+  document.body.appendChild(walkCanvas);
+  const wctx = walkCanvas.getContext("2d");
+  const WALK_H = 56;
 
   // Pre-render each sprite at several pixel sizes so drawing stays cheap
   const cache = {};
@@ -130,7 +194,7 @@
 
   function makeParticle(startAnywhere) {
     const name = BAG[Math.floor(Math.random() * BAG.length)];
-    const px = name === "cloud" ? 8 : 4 + Math.floor(Math.random() * 4); // pixel size 4–7
+    const px = 4 + Math.floor(Math.random() * 4); // pixel size 4–7
     const img = sprite(name, px);
     return {
       img,
@@ -156,6 +220,12 @@
     canvas.style.height = height + "px";
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = false; // keep pixels crisp
+    walkCanvas.width = Math.round(width * dpr);
+    walkCanvas.height = Math.round(WALK_H * dpr);
+    walkCanvas.style.width = width + "px";
+    walkCanvas.style.height = WALK_H + "px";
+    wctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    wctx.imageSmoothingEnabled = false;
 
     const target = Math.round(Math.min(60, Math.max(20, (width * height) / 20000)));
     while (particles.length < target) particles.push(makeParticle(true));
@@ -173,6 +243,11 @@
       ctx.drawImage(p.img, Math.round(cx - p.img.width / 2), Math.round(cy - p.img.height / 2));
     }
     ctx.globalAlpha = 1;
+
+    // walking cat
+    wctx.clearRect(0, 0, width, WALK_H);
+    const frame = sprite("walk" + (Math.floor(t / 180) % 2), 6);
+    wctx.drawImage(frame, Math.round(walker.x), WALK_H - frame.height - 4);
   }
 
   function step(t) {
@@ -194,6 +269,9 @@
 
       if (p.y < -p.img.height - 40) particles[i] = makeParticle(false);
     }
+    if (walker.pause > 0) walker.pause--;
+    else walker.x += walker.speed;
+    if (walker.x > width + 40) { walker.x = -120; walker.pause = 240; }
     draw(t);
   }
 
@@ -216,6 +294,7 @@
   function start() {
     if (raf || !enabled || document.hidden) return;
     canvas.style.opacity = "1";
+    walkCanvas.style.opacity = "1";
     raf = requestAnimationFrame(loop);
   }
   function stop() {
@@ -237,6 +316,7 @@
     else {
       stop();
       canvas.style.opacity = "0";
+      walkCanvas.style.opacity = "0";
     }
   }
 
@@ -254,5 +334,5 @@
   resize();
   updateToggle();
   if (enabled) start();
-  else canvas.style.opacity = "0";
+  else { canvas.style.opacity = "0"; walkCanvas.style.opacity = "0"; }
 })();
