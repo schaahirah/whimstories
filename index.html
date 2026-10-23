@@ -7,7 +7,7 @@
   <meta name="description" content="make cute ig story collages with filters. free, no account, photos stay on your device." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@1,700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;1,6..96,400;1,6..96,500&family=Jost:wght@400;500;600&family=Caveat:wght@700&family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@1,700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -23,7 +23,7 @@
     <!-- CONTROLS -->
     <section class="panel">
       <div class="card">
-        <h2><span class="step">1</span> photos</h2>
+        <h2>photos</h2>
         <label class="upload" id="dropZone">
           <input type="file" id="fileInput" accept="image/*" multiple hidden />
           <span class="upload-icon">＋</span>
@@ -37,29 +37,29 @@
       </div>
 
       <div class="card">
-        <h2><span class="step">2</span> layout</h2>
+        <h2>layout</h2>
         <div class="tpl-grid" id="tplGrid"></div>
       </div>
 
       <div class="card">
-        <h2><span class="step">3</span> filter</h2>
+        <h2>filter</h2>
         <div class="filter-grid" id="filterGrid"></div>
       </div>
 
       <div class="card">
-        <h2><span class="step">4</span> colours</h2>
+        <h2>colours</h2>
         <div class="chips" id="paletteChips"></div>
       </div>
 
       <div class="card">
-        <h2><span class="step">5</span> background</h2>
+        <h2>background</h2>
         <input type="file" id="bgInput" accept="image/*" hidden />
         <div class="bg-grid" id="bgGrid"></div>
         <button type="button" class="btn ghost small" onclick="document.getElementById('bgInput').click()">upload your own</button>
       </div>
 
       <div class="card">
-        <h2><span class="step">6</span> text</h2>
+        <h2>text</h2>
         <label>title <input id="headline" maxlength="60" /></label>
         <label>small text <input id="subtext" maxlength="40" /></label>
         <label>captions <small>(separate with commas)</small>
