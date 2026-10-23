@@ -1,20 +1,11 @@
-// ===== WhimStories =====
-// Cute IG Story collage maker. Everything runs in the browser:
-// photos are never uploaded anywhere.
-
-// ---------- Settings (edit these!) ----------
-// githubRepo: used to open a pre-filled GitHub Issue for feedback
-// feedbackEndpoint: optional Formspree URL (https://formspree.io/f/xxxx) so people
-// without a GitHub account can send feedback too. Leave "" to use GitHub Issues only.
 const CONFIG = {
-  githubRepo: "YOUR-USERNAME/whimstories",
+  githubRepo: "schaahirah/whimstories",
   feedbackEndpoint: "",
 };
 
 const W = 1080;
 const H = 1920;
 
-// ---------- Colour vibes ----------
 const PALETTES = {
   bubblegum: { label: "bubblegum", bg: "#ffd1e8", bg2: "#ff8cc6", accent: "#ff3d9a", accent2: "#ffe066", pop: "#4f7cff", ink: "#a3125a", paper: "#fff6fb" },
   butter:    { label: "butter",    bg: "#fff4b8", bg2: "#ffcf5c", accent: "#ff6b6b", accent2: "#46c2b0", pop: "#ff9f1c", ink: "#8a4b00", paper: "#fffdf0" },
@@ -24,9 +15,6 @@ const PALETTES = {
   cherry:    { label: "cherry",    bg: "#ffe0dc", bg2: "#ff6b6b", accent: "#e01e37", accent2: "#7bd389", pop: "#ffd166", ink: "#8c0f22", paper: "#fff7f5" },
 };
 
-// ---------- Filters ----------
-// sat = saturation, con = contrast, bri = brightness, tint = [r,g,b] shift,
-// sepia = 0..1, fade = lift blacks, grain = film noise, shadowTint = colour in dark areas
 const FILTERS = {
   none:    { label: "original" },
   bw:      { label: "b&w", sat: 0, con: 1.1 },
@@ -39,25 +27,22 @@ const FILTERS = {
   cool:    { label: "cool", sat: 0.9, con: 1.05, tint: [-10, 4, 18] },
 };
 
-// ---------- State ----------
 const state = {
   template: "grid",
   palette: "bubblegum",
   filter: "none",
-  bg: "default",   // "default" = template's own background
-  bgImage: null,   // canvas of the user's own background
-  photos: [], // { orig: canvas, cache: { filterName: canvas } }
+  bg: "default",   
+  bgImage: null,  
+  photos: [], 
 };
 const MAX_PHOTOS = 8;
 
-// ---------- Elements ----------
 const $ = (id) => document.getElementById(id);
 const canvas = $("story");
 canvas.width = W;
 canvas.height = H;
 const ctx = canvas.getContext("2d");
 
-// ---------- Fonts ----------
 const FONT = {
   script: (s) => `italic 700 ${s}px "Playfair Display", Georgia, serif`,
   mono:   (s) => `700 ${s}px "Space Mono", ui-monospace, monospace`,
@@ -65,9 +50,6 @@ const FONT = {
   sans:   (s) => `800 ${s}px "Inter", system-ui, sans-serif`,
 };
 
-// =====================================================
-// Photo filters (pixel by pixel, works on every browser)
-// =====================================================
 function applyFilter(src, f) {
   if (!f || f === FILTERS.none) return src;
   const out = document.createElement("canvas");
@@ -104,7 +86,7 @@ function applyFilter(src, f) {
     g = (g - 128) * con + 128 + bri + t[1];
     b = (b - 128) * con + 128 + bri + t[2];
 
-    // colour in the shadows (film look)
+    // film look
     if (st) {
       const s = Math.max(0, 1 - gray / 128);
       r += st[0] * s; g += st[1] * s; b += st[2] * s;
@@ -122,7 +104,7 @@ function applyFilter(src, f) {
       r += n; g += n; b += n;
     }
 
-    a[i] = r; a[i + 1] = g; a[i + 2] = b; // values auto-clamp to 0..255
+    a[i] = r; a[i + 1] = g; a[i + 2] = b; 
   }
   x.putImageData(img, 0, 0);
   return out;
@@ -137,9 +119,6 @@ function pic(i) {
   return photo.cache[state.filter];
 }
 
-// =====================================================
-// Drawing helpers
-// =====================================================
 const pal = () => PALETTES[state.palette];
 
 function rrPath(c, x, y, w, h, r) {
@@ -208,8 +187,6 @@ function drawPhoto(c, i, x, y, w, h, { radius = 0, oval = false } = {}) {
   else placeholder(c, x, y, w, h, i);
   c.restore();
 }
-
-// ----- text -----
 function fitFont(c, text, maxW, size, fam) {
   let s = size;
   c.font = FONT[fam](s);
@@ -257,7 +234,6 @@ function wrapLines(c, text, maxW) {
   return lines;
 }
 
-// ----- backgrounds -----
 function gradientBg(c, c1, c2, y0 = 0, h = H) {
   const g = c.createLinearGradient(0, y0, W, y0 + h);
   g.addColorStop(0, c1);
@@ -332,7 +308,6 @@ function noise(c, alpha) {
   c.restore();
 }
 
-// ----- stickers -----
 function star(c, cx, cy, r, color, { pts = 5, inner = 0.45, rot = 0 } = {}) {
   c.save();
   c.translate(cx, cy);
@@ -450,7 +425,6 @@ const TEMPLATES = {
     },
   },
 
-  // Inspired by: black photobooth strips on a bright background
   strips: {
     label: "strips",
     photos: 6,
@@ -488,7 +462,6 @@ const TEMPLATES = {
     },
   },
 
-  // Inspired by: polaroids stuck on a fridge with magnets
   fridge: {
     label: "fridge",
     photos: 5,
@@ -545,7 +518,6 @@ const TEMPLATES = {
     },
     draw(c, p, t) {
 
-      // squiggly line
       c.save();
       c.strokeStyle = p.accent;
       c.lineWidth = 7;
@@ -587,7 +559,6 @@ const TEMPLATES = {
     },
   },
 
-  // Inspired by: big oval photo + numbered 001 002 003 frames
   spotlight: {
     label: "spotlight",
     photos: 4,
@@ -595,7 +566,7 @@ const TEMPLATES = {
     sub: "roll 01 · 36 exp",
     tags: "",
     bg(c, p) {
-      // top half: corduroy texture, bottom half: gingham
+ 
       c.fillStyle = p.bg2;
       c.fillRect(0, 0, W, 1000);
       c.fillStyle = "rgba(0,0,0,.08)";
@@ -611,7 +582,6 @@ const TEMPLATES = {
       c.restore();
       drawPhoto(c, 0, 140, 200, 800, 640, { oval: true });
 
-      // headline words around the oval
       const words = t.headline.split(/\s+/).filter(Boolean);
       const slots = [[80, 120, "left"], [290, 940, "center"], [1000, 900, "right"]];
       const chunks = words.length > 3 ? [words[0], words[1], words.slice(2).join(" ")] : words;
@@ -619,7 +589,6 @@ const TEMPLATES = {
         txt(c, w, slots[k][0], slots[k][1], { fam: k === 1 ? "script" : "sans", size: 64, color: "#fff", align: slots[k][2], maxW: 520 }));
       [[330, 70], [960, 120], [70, 520], [1015, 470], [800, 960]].forEach(([x, y]) => star(c, x, y, 30, "#ffffff"));
 
-      // bottom half: 3 numbered frames
       for (let k = 0; k < 3; k++) {
         const x = 75 + k * 320, y = 1170, w = 290, h = 380;
         c.save();
@@ -635,8 +604,7 @@ const TEMPLATES = {
       star(c, 110, 1080, 50, p.pop);
     },
   },
-
-  // Inspired by: envelope + card with oval photo and cute text
+  
   letter: {
     label: "love letter",
     photos: 2,
@@ -650,7 +618,6 @@ const TEMPLATES = {
     },
     draw(c, p, t) {
 
-      // envelope
       rotated(c, 540, 600, -0.07, () => {
         c.save();
         shadow(c, 30, 14, 0.2);
@@ -663,8 +630,7 @@ const TEMPLATES = {
         c.moveTo(-380, -250); c.lineTo(0, 40); c.lineTo(380, -250);
         c.closePath(); c.fill();
       });
-
-      // card
+      
       rotated(c, 560, 690, 0.05, () => {
         c.save();
         shadow(c, 30, 14, 0.22);
@@ -686,7 +652,6 @@ const TEMPLATES = {
           txt(c, ln, -40, startY + k * 48, { fam: "mono", size: 30, color: "#333", align: "left", maxW: 390 }));
       });
 
-      // striped photo frame
       const fx = 170, fy = 1060, fw = 740, fh = 720;
       c.save();
       shadow(c, 30, 14, 0.22);
@@ -710,9 +675,6 @@ const TEMPLATES = {
   },
 };
 
-// =====================================================
-// Backgrounds (all follow the chosen colour vibe)
-// =====================================================
 function seeded(seed) {
   return () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 }
@@ -751,9 +713,6 @@ function drawBackground(c, p) {
   if (state.bg !== "default" && state.bg !== "custom") noise(c, 0.06);
 }
 
-// =====================================================
-// Rendering
-// =====================================================
 function textFor(key) {
   const tpl = TEMPLATES[key];
   const headline = $("headline").value.trim() || tpl.headline;
@@ -767,7 +726,7 @@ function drawTemplate(c, key) {
   c.save();
   c.clearRect(0, 0, W, H);
   const prev = state.template;
-  state.template = key; // so "layout's own" background matches this template
+  state.template = key; 
   drawBackground(c, pal());
   state.template = prev;
   TEMPLATES[key].draw(c, pal(), textFor(key));
@@ -784,7 +743,6 @@ function render() {
   });
 }
 
-// ----- template thumbnails -----
 const offscreen = document.createElement("canvas");
 offscreen.width = W;
 offscreen.height = H;
@@ -803,7 +761,6 @@ function refreshTemplateThumbs() {
   }, 250);
 }
 
-// ----- filter thumbnails -----
 function sampleCanvas() {
   const s = document.createElement("canvas");
   s.width = s.height = 120;
@@ -832,7 +789,6 @@ function refreshFilterThumbs() {
   });
 }
 
-// ----- background thumbnails -----
 let bgTimer = null;
 function refreshBgThumbs() {
   clearTimeout(bgTimer);
@@ -856,9 +812,6 @@ function refreshAll() {
   refreshBgThumbs();
 }
 
-// =====================================================
-// UI building
-// =====================================================
 function buildTemplatePicker() {
   $("tplGrid").innerHTML = Object.entries(TEMPLATES)
     .map(([key, t]) => `
@@ -923,9 +876,6 @@ function renderThumbs() {
   });
 }
 
-// =====================================================
-// Photo upload
-// =====================================================
 function loadImage(file) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -954,7 +904,6 @@ async function addFiles(fileList) {
       break;
     }
     try {
-      // shrink big phone photos so filters stay fast
       state.photos.push({ orig: await fileToCanvas(file), cache: {} });
     } catch (err) {
       alert("couldn't open that file, try a JPG or PNG (・・;)");
@@ -965,9 +914,6 @@ async function addFiles(fileList) {
   refreshAll();
 }
 
-// =====================================================
-// Export
-// =====================================================
 function fileName() {
   return `whimstories-${state.template}.png`;
 }
@@ -997,9 +943,6 @@ async function share() {
   }
 }
 
-// =====================================================
-// Events
-// =====================================================
 $("fileInput").addEventListener("change", (e) => {
   addFiles(e.target.files);
   e.target.value = "";
@@ -1072,7 +1015,7 @@ $("bgGrid").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-bg]");
   if (!btn) return;
   if (btn.dataset.bg === "custom" && !state.bgImage) {
-    $("bgInput").click(); // no pic yet, so ask for one
+    $("bgInput").click(); 
     return;
   }
   state.bg = btn.dataset.bg;
@@ -1100,9 +1043,7 @@ $("bgInput").addEventListener("change", async (e) => {
 $("downloadBtn").addEventListener("click", download);
 $("shareBtn").addEventListener("click", share);
 
-// =====================================================
-// Feedback ("spill the tea")
-// =====================================================
+
 const feedback = { rating: "", type: "idea" };
 
 function pickOne(containerId, attr, value) {
@@ -1152,9 +1093,8 @@ $("fbSend").addEventListener("click", async () => {
 
   const sendBtn = $("fbSend");
   sendBtn.disabled = true;
-  setTimeout(() => (sendBtn.disabled = false), 8000); // small anti-spam pause
+  setTimeout(() => (sendBtn.disabled = false), 8000); 
 
-  // Option A: Formspree (no account needed for the person sending)
   if (CONFIG.feedbackEndpoint) {
     setStatus("sending…");
     try {
@@ -1172,8 +1112,7 @@ $("fbSend").addEventListener("click", async () => {
     return;
   }
 
-  // Option B: pre-filled GitHub Issue
-  if (!CONFIG.githubRepo || CONFIG.githubRepo.includes("YOUR" + "-USERNAME")) { // placeholder not replaced yet
+  if (!CONFIG.githubRepo || CONFIG.githubRepo.includes("YOUR" + "-USERNAME")) { 
     setStatus("feedback isn't set up yet (see README)");
     return;
   }
@@ -1188,9 +1127,6 @@ $("fbSend").addEventListener("click", async () => {
   setStatus("opening GitHub to post it (needs a GitHub account)");
 });
 
-// =====================================================
-// Start
-// =====================================================
 buildTemplatePicker();
 buildBgPicker();
 buildFilterPicker();
@@ -1199,7 +1135,6 @@ updatePlaceholders();
 refreshFilterThumbs();
 refreshAll();
 
-// Redraw once the cute fonts have loaded
 Promise.all([
   document.fonts.load(FONT.script(80)),
   document.fonts.load(FONT.mono(40)),
