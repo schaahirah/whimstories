@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>whimstories — ig story collages</title>
+  <meta name="description" content="make cute ig story collages with filters. free, no account, photos stay on your device." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;600;800&family=Playfair+Display:ital,wght@1,700&family=Space+Mono:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- floating pixel flowers (decoration only) -->
+  <canvas id="pixelBg" aria-hidden="true"></canvas>
+  <button type="button" id="vibesToggle" class="vibes-toggle" aria-pressed="true">✿ motion on</button>
+
+  <header class="site-header">
+    <h1>whim<span>stories</span> ✿</h1>
+  </header>
+
+  <main class="layout">
+    <!-- CONTROLS -->
+    <section class="panel">
+      <div class="card">
+        <h2><span class="step">1</span> photos</h2>
+        <label class="upload" id="dropZone">
+          <input type="file" id="fileInput" accept="image/*" multiple hidden />
+          <span class="upload-icon">＋</span>
+          <span><strong>add photos</strong><br /><small>tap or drag in · up to 8</small></span>
+        </label>
+        <div class="thumbs" id="thumbs"></div>
+        <div class="row-btns">
+          <button type="button" class="btn ghost small" id="shuffleBtn">shuffle</button>
+          <button type="button" class="btn ghost small" id="clearBtn">clear</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">2</span> layout</h2>
+        <div class="tpl-grid" id="tplGrid"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">3</span> filter</h2>
+        <div class="filter-grid" id="filterGrid"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">4</span> colours</h2>
+        <div class="chips" id="paletteChips"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">5</span> background</h2>
+        <input type="file" id="bgInput" accept="image/*" hidden />
+        <div class="bg-grid" id="bgGrid"></div>
+        <button type="button" class="btn ghost small" onclick="document.getElementById('bgInput').click()">upload your own</button>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">6</span> text</h2>
+        <label>title <input id="headline" maxlength="60" /></label>
+        <label>small text <input id="subtext" maxlength="40" /></label>
+        <label>captions <small>(separate with commas)</small>
+          <input id="tags" maxlength="140" />
+        </label>
+        <p class="hint">leave blank to keep the default text</p>
+      </div>
+    </section>
+
+    <!-- PREVIEW -->
+    <section class="preview">
+      <div class="phone">
+        <canvas id="story" aria-label="Story preview"></canvas>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn" id="downloadBtn">download</button>
+        <button type="button" class="btn ghost" id="shareBtn">share</button>
+      </div>
+      <p class="privacy">your photos never leave your device ( ˘ ³˘)♡</p>
+    </section>
+  </main>
+
+  <!-- FEEDBACK -->
+  <section class="feedback-wrap">
+    <div class="card feedback">
+      <h2>feedback</h2>
+      <p class="hint top">ideas or bugs? tell me (・ω・)ノ</p>
+
+      <p class="mini-label">how is it?</p>
+      <div class="rating" id="fbRating">
+        <button type="button" data-rate="love it" aria-label="love it" title="love it">(♡ᴗ♡)</button>
+        <button type="button" data-rate="good" aria-label="good" title="good">(◕‿◕)</button>
+        <button type="button" data-rate="okay" aria-label="okay" title="okay">(・_・)</button>
+        <button type="button" data-rate="bad" aria-label="bad" title="bad">(×_×)</button>
+      </div>
+
+      <p class="mini-label">type</p>
+      <div class="chips" id="fbType">
+        <button type="button" class="chip active" data-type="idea" aria-pressed="true">idea</button>
+        <button type="button" class="chip" data-type="bug" aria-pressed="false">bug</button>
+        <button type="button" class="chip" data-type="love" aria-pressed="false">just love</button>
+      </div>
+
+      <label class="spaced">message
+        <textarea id="fbText" rows="4" maxlength="1000" placeholder="what should change?"></textarea>
+      </label>
+      <label>name <small>(optional)</small>
+        <input id="fbName" maxlength="40" placeholder="anonymous" />
+      </label>
+      <button type="button" class="btn" id="fbSend">send</button>
+      <p class="hint" id="fbStatus" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <footer class="site-footer">© 2026 schaahirah</footer>
+
+  <script src="bg-anim.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
