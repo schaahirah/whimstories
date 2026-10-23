@@ -2,10 +2,9 @@
 
 Cute IG story collages with filters, made in your browser (˶ᵔ ᵕ ᵔ˶)
 
-**Live demo:** https://YOUR-USERNAME.github.io/whimstories/
+**Live demo:** https://schaahirah.github.io/whimstories/
 
 ![Screenshot](screenshot.png)
-<!-- Tip: make a story, save it as screenshot.png and upload it to the repo -->
 
 ---
 
